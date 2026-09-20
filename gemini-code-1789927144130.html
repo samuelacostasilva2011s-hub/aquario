@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>River Rescue Hero - Retro RPG Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Press Start 2P', cursive, monospace;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050811;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 900px;
+            max-height: 100vh;
+            background: #113836;
+            box-shadow: 0 0 30px rgba(0, 255, 200, 0.2);
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 10, 20, 0.92);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .hidden { display: none !important; }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-animate {
+            animation: modalFadeIn 0.3s ease-out forwards;
+        }
+
+        .modal-animate .story-card, .modal-animate .summary-card, .modal-animate .cover-card {
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        #cover-screen {
+            background: radial-gradient(circle, #003b46 0%, #021c24 70%, #000d1a 100%);
+            border: 4px solid #00ffcc;
+        }
+
+        .cover-card {
+            background: rgba(0, 20, 30, 0.92);
+            border: 4px solid #33ffaa;
+            padding: 24px 28px;
+            box-shadow: 0 0 35px rgba(0, 255, 170, 0.35), inset 0 0 20px rgba(0, 255, 200, 0.1);
+            max-width: 780px;
+            width: 94%;
+            display: grid;
+            grid-template-columns: 1fr 270px;
+            gap: 22px;
+            align-items: center;
+            text-align: left;
+            animation: pulseGlow 2.5s infinite alternate;
+        }
+
+        @media (max-width: 720px) {
+            .cover-card {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 15px rgba(0, 255, 170, 0.3); }
+            100% { box-shadow: 0 0 35px rgba(0, 255, 204, 0.6), 0 0 15px rgba(255, 0, 85, 0.3); }
+        }
+
+        .cover-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 720px) {
+            .cover-left { align-items: center; }
+        }
+
+        .hero-badge-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .hero-badge {
+            background: #ff0055;
+            color: #fff;
+            font-size: 0.5rem;
+            padding: 5px 10px;
+            border: 2px solid #fff;
+        }
+
+        .hero-badge-blue {
+            background: #0284c7;
+            color: #fff;
+            font-size: 0.5rem;
+            padding: 5px 10px;
+            border: 2px solid #38bdf8;
+        }
+
+        h1.title {
+            font-size: 1.25rem;
+            color: #00ffcc;
+            text-shadow: 3px 3px #ff0055;
+            margin-bottom: 10px;
+            line-height: 1.35;
+        }
+
+        h2.subtitle {
+            font-size: 0.55rem;
+            color: #aaffe6;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .cover-side-panel {
+            background: rgba(2, 10, 18, 0.85);
+            border: 2px solid #1a3a4b;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-radius: 4px;
+        }
+
+        .side-panel-title {
+            font-size: 0.52rem;
+            color: #ffaa00;
+            border-bottom: 1px solid #1a3a4b;
+            padding-bottom: 6px;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+
+        .side-feature-item {
+            font-size: 0.45rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        @media (max-width: 480px) {
+            .btn-group { flex-direction: column; }
+        }
+
+        .btn {
+            background: #00cc66;
+            color: #000;
+            border: 3px solid #fff;
+            padding: 12px 18px;
+            font-size: 0.68rem;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #006633;
+            transition: all 0.1s ease-in-out;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn:hover {
+            transform: scale(1.03);
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #006633;
+        }
+
+        .btn-secondary {
+            background: #224466;
+            color: #00ffcc;
+            box-shadow: 4px 4px 0px #112233;
+        }
+
+        .btn-info {
+            background: #ffaa00;
+            color: #000;
+            box-shadow: 4px 4px 0px #996600;
+        }
+
+        #story-screen {
+            background: radial-gradient(circle, #091726 0%, #030810 100%);
+            border: 4px solid #00ffcc;
+            padding: 10px;
+        }
+
+        .story-card {
+            background: #0a111a;
+            border: 4px solid #00ffcc;
+            outline: 4px solid #000;
+            padding: 15px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.25);
+            overflow-y: auto;
+        }
+
+        .story-header {
+            font-size: 0.7rem;
+            color: #ffaa00;
+            text-shadow: 2px 2px #000;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        #story-canvas {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            aspect-ratio: 400 / 120;
+            background: #050b12;
+            border: 3px solid #1a3a4b;
+            margin-bottom: 12px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .story-content {
+            background: #02060d;
+            border: 3px solid #00ffcc;
+            padding: 12px;
+            margin-bottom: 12px;
+            width: 100%;
+            min-height: 90px;
+            max-height: 150px;
+            overflow-y: auto;
+            text-align: left;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .story-content::-webkit-scrollbar { width: 6px; }
+        .story-content::-webkit-scrollbar-track { background: #050b12; }
+        .story-content::-webkit-scrollbar-thumb { background: #00ffcc; }
+
+        .story-text {
+            font-size: 0.58rem;
+            color: #ffffff;
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .story-page-indicator {
+            font-size: 0.5rem;
+            color: #00ffcc;
+            margin-bottom: 10px;
+        }
+
+        .story-controls {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .hub-panel {
+            width: 95%;
+            max-width: 740px;
+            max-height: 92vh;
+            background: #0a1420;
+            border: 4px solid #00ffcc;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .hub-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #00ffcc;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 0.75rem;
+        }
+
+        .coin-display { color: #ffcc00; }
+
+        .section-title {
+            font-size: 0.65rem;
+            color: #ff0055;
+            margin: 15px 0 10px 0;
+            text-align: left;
+            text-transform: uppercase;
+        }
+
+        .upgrade-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .upgrade-card {
+            background: #102030;
+            padding: 10px;
+            border: 2px solid #225577;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-align: left;
+        }
+
+        .upgrade-card h4 {
+            color: #00ffcc;
+            font-size: 0.58rem;
+            margin-bottom: 6px;
+        }
+
+        .upgrade-card p {
+            color: #aaa;
+            font-size: 0.45rem;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+
+        .buy-btn {
+            background: #ffcc00;
+            border: 2px solid #fff;
+            color: #000;
+            padding: 8px;
+            font-size: 0.48rem;
+            cursor: pointer;
+            box-shadow: 2px 2px 0 #997700;
+            text-transform: uppercase;
+        }
+
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 5;
+            font-size: 0.52rem;
+        }
+
+        .hud-box {
+            background: rgba(0, 0, 0, 0.85);
+            padding: 6px 10px;
+            border: 2px solid #00ffcc;
+        }
+
+        .hud-title { color: #88aabb; margin-bottom: 3px; }
+        .hud-value { color: #00ffcc; font-weight: bold; }
+
+        .bar-container {
+            width: 80px;
+            height: 8px;
+            background: #222;
+            border: 1px solid #fff;
+            margin-top: 3px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: #00ffcc;
+            transition: width 0.2s;
+        }
+
+        #touch-controls {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 15px;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .touch-group {
+            display: flex;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .touch-btn {
+            width: 55px;
+            height: 55px;
+            background: rgba(0, 255, 200, 0.2);
+            border: 2px solid #00ffcc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            color: white;
+            pointer-events: auto;
+            border-radius: 8px;
+        }
+
+        .touch-btn:active { background: rgba(0, 255, 200, 0.6); }
+
+        #boss-hud {
+            position: absolute;
+            top: 55px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 400px;
+            background: rgba(0,0,0,0.85);
+            border: 2px solid #ff0055;
+            padding: 6px;
+            text-align: center;
+            z-index: 5;
+        }
+
+        #boss-name { font-size: 0.52rem; color: #ff0055; margin-bottom: 4px; }
+        .boss-bar-container { width: 100%; height: 10px; background: #330011; border: 1px solid #fff; }
+        .boss-bar-fill { height: 100%; background: #ff0055; width: 100%; transition: width 0.1s; }
+
+        .summary-card {
+            background: #06111e;
+            border: 4px solid #00ffcc;
+            outline: 4px solid #000;
+            padding: 18px;
+            max-width: 680px;
+            width: 95%;
+            max-height: 94vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.35);
+            overflow-y: auto;
+        }
+
+        .summary-header {
+            font-size: 0.8rem;
+            color: #00ffcc;
+            text-shadow: 2px 2px #000;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .summary-triptych {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 14px;
+        }
+
+        .panel-box {
+            background: #02060d;
+            border: 2px solid #00ffcc;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .panel-tag {
+            background: #000000cc;
+            color: #00ffcc;
+            font-size: 0.44rem;
+            padding: 4px 6px;
+            border-bottom: 1px solid #00ffcc;
+            text-align: center;
+        }
+
+        .panel-img-wrap {
+            width: 100%;
+            height: 95px;
+            background: #050b12;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .bubble-overlay {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            right: 4px;
+            background: rgba(0, 0, 0, 0.88);
+            border: 1px solid #fff;
+            padding: 4px;
+            font-size: 0.38rem;
+            color: #fff;
+            text-align: center;
+            line-height: 1.25;
+        }
+
+        .summary-message-box {
+            background: #02060d;
+            border: 3px solid #00ffcc;
+            padding: 12px;
+            margin-bottom: 14px;
+            width: 100%;
+            text-align: center;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .summary-message-text {
+            font-size: 0.5rem;
+            color: #ffffff;
+            line-height: 1.65;
+            letter-spacing: 0.4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="cover-screen" class="overlay">
+            <div class="cover-card">
+                <div class="cover-left">
+                    <div class="hero-badge-row">
+                        <span class="hero-badge">🎮 8-BIT RETRO RPG</span>
+                        <span class="hero-badge-blue">CAUCA RIVER EDITION</span>
+                    </div>
+                    <h1 class="title">RIVER RESCUE<br>HERO</h1>
+                    <h2 class="subtitle">PURIFY THE STREAM & DEFEAT POLLUTION BOSSES ACROSS 2 CRITICAL SECTORS!</h2>
+                    <div class="btn-group">
+                        <div style="display: flex; gap: 10px; width: 100%;">
+                            <button id="cover-play-btn" class="btn" style="flex: 1;">▶ PLAY NOW</button>
+                            <a href="https://morning-sound-34e5.samuelacostasilva2011s.workers.dev/" target="_blank" class="btn btn-info">ℹ INFO</a>
+                        </div>
+                        <button id="cover-top10-btn" class="btn btn-secondary" style="width: 100%; font-size: 0.5rem; padding: 10px;">🏆 TOP 10 LEADERBOARD</button>
+                    </div>
+                </div>
+                <div class="cover-side-panel">
+                    <div class="side-panel-title">MISSION BRIEF</div>
+                    <div class="side-feature-item">🌊 2 High-Risk Eco-Levels</div>
+                    <div class="side-feature-item">🔫 Upgradeable Water Cannons</div>
+                    <div class="side-feature-item">🛡️ Eco-Shield & Cargo Tanque</div>
+                    <div class="side-feature-item">🪙 Collect Coins & Purify</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP 10 MODAL -->
+        <div id="top10-screen" class="overlay hidden" style="z-index: 1004;">
+            <div class="story-card" style="width: 95%; max-width: 480px;">
+                <div class="story-header">🏆 TOP 10 ECO-HEROES</div>
+                <div style="width: 100%; max-height: 250px; overflow-y: auto; margin-bottom: 14px; background: #02060d; border: 2px solid #00ffcc; padding: 8px;">
+                    <table style="width: 100%; font-size: 0.48rem; text-align: left; border-collapse: collapse; color: #fff;">
+                        <thead>
+                            <tr style="color: #ffcc00; border-bottom: 1px solid #1a3a4b;">
+                                <th style="padding: 4px;">#</th>
+                                <th style="padding: 4px;">HERO</th>
+                                <th style="padding: 4px;">SCORE</th>
+                                <th style="padding: 4px;">LVL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top10-tbody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <button id="close-top10-btn" class="btn" style="width: 100%;">BACK TO COVER</button>
+            </div>
+        </div>
+
+        <div id="name-screen" class="overlay hidden" style="z-index: 1003;">
+            <div class="story-card" style="width: 95%; max-width: 440px; text-align: center;">
+                <div class="story-header">IDENTIFY YOURSELF</div>
+                <p style="font-size: 0.55rem; color: #aaffe6; margin-bottom: 18px; line-height: 1.6;">Enter your Eco-Hero name to load or save your adventure progress:</p>
+                <input type="text" id="player-name-input" maxlength="15" placeholder="ECO-HERO NAME" style="width: 100%; padding: 14px; background: #02060d; border: 3px solid #00ffcc; color: #00ffcc; font-family: 'Press Start 2P', cursive; font-size: 0.62rem; text-align: center; margin-bottom: 22px; outline: none; text-transform: uppercase;">
+                <button id="name-confirm-btn" class="btn" style="width: 100%;">CONFIRM & START</button>
+            </div>
+        </div>
+
+        <div id="story-screen" class="overlay hidden">
+            <div class="story-card">
+                <div class="story-header" id="story-title">📜 ORIGIN OF THE CAUCA RIVER</div>
+                <canvas id="story-canvas" width="400" height="120"></canvas>
+                <div class="story-content">
+                    <p class="story-text" id="story-text"></p>
+                </div>
+                <div class="story-page-indicator" id="story-page-num">PAGE 1 OF 5</div>
+                <div class="story-controls">
+                    <button id="story-next-btn" class="btn" style="width: 100%;">NEXT ▶</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="hub-screen" class="overlay hidden">
+            <div class="hub-panel">
+                <div class="hub-header">
+                    <span>COMMAND CENTER (<span id="hud-player-name" style="color:#00ffcc;">HERO</span>)</span>
+                    <div class="coin-display">🪙 <span id="hub-coins">0</span></div>
+                </div>
+
+                <div class="section-title">COMBAT & CLEANING EQUIPMENT</div>
+                <div class="upgrade-grid">
+                    <div class="upgrade-card">
+                        <div>
+                            <h4>Collecting Net (Lvl <span id="lvl-cargo">1</span>)</h4>
+                            <p>Increases waste tank capacity before purification.</p>
+                        </div>
+                        <button class="buy-btn" id="btn-cargo" onclick="buyUpgrade('cargo')">Upgrade (🪙 <span id="cost-cargo">50</span>)</button>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div>
+                            <h4>Turbo Engine (Lvl <span id="lvl-speed">1</span>)</h4>
+                            <p>Higher speed to dodge Boss attacks.</p>
+                        </div>
+                        <button class="buy-btn" id="btn-speed" onclick="buyUpgrade('speed')">Upgrade (🪙 <span id="cost-speed">50</span>)</button>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div>
+                            <h4>Water Cannon (Lvl <span id="lvl-cannon">1</span>)</h4>
+                            <p>FIRE WATER BLAST WITH "K" OR "SPACE"! Vital against Bosses.</p>
+                        </div>
+                        <button class="buy-btn" id="btn-cannon" onclick="buyUpgrade('cannon')">Upgrade (🪙 <span id="cost-cannon">100</span>)</button>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div>
+                            <h4>Eco-Shield (Lvl <span id="lvl-shield">0</span>)</h4>
+                            <p>Absorbs Boss projectiles and rock collisions.</p>
+                        </div>
+                        <button class="buy-btn" id="btn-shield" onclick="buyUpgrade('shield')">Buy (🪙 <span id="cost-shield">150</span>)</button>
+                    </div>
+
+                    <div class="upgrade-card">
+                        <div>
+                            <h4>Eco Multiplier (Lvl <span id="lvl-mult">1</span>)</h4>
+                            <p>Earn more coins per recycled item.</p>
+                        </div>
+                        <button class="buy-btn" id="btn-mult" onclick="buyUpgrade('mult')">Upgrade (🪙 <span id="cost-mult">75</span>)</button>
+                    </div>
+                </div>
+
+                <div class="section-title">VESSEL CUSTOMIZATION (SKINS)</div>
+                <div class="upgrade-grid">
+                    <div class="upgrade-card" style="border-color:#0284c7;">
+                        <div>
+                            <h4>Classic Blue</h4>
+                            <p>Standard eco-patrol navy blue finish.</p>
+                        </div>
+                        <button class="buy-btn" id="skin-btn-classic" onclick="equipSkin('classic')">EQUIPPED</button>
+                    </div>
+                    <div class="upgrade-card" style="border-color:#059669;">
+                        <div>
+                            <h4>Emerald Eco</h4>
+                            <p>Jungle camouflage green hull.</p>
+                        </div>
+                        <button class="buy-btn" id="skin-btn-emerald" onclick="handleSkinAction('emerald', 100)">Buy (🪙 100)</button>
+                    </div>
+                    <div class="upgrade-card" style="border-color:#d97706;">
+                        <div>
+                            <h4>Solar Gold</h4>
+                            <p>High-reflectivity gilded alloy.</p>
+                        </div>
+                        <button class="buy-btn" id="skin-btn-gold" onclick="handleSkinAction('gold', 250)">Buy (🪙 250)</button>
+                    </div>
+                    <div class="upgrade-card" style="border-color:#db2777;">
+                        <div>
+                            <h4>Cyber Plasma</h4>
+                            <p>High-voltage magenta/cyan neon wrap.</p>
+                        </div>
+                        <button class="buy-btn" id="skin-btn-cyber" onclick="handleSkinAction('cyber', 400)">Buy (🪙 400)</button>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                    <button id="start-mission-btn" class="btn" style="width: 100%;">START LEVEL</button>
+                    <button id="back-cover-btn" class="btn btn-secondary" style="width: 40%;">BACK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="hud" class="hidden">
+            <div class="hud-box">
+                <div class="hud-title">River Purity</div>
+                <div class="bar-container">
+                    <div id="purity-bar" class="bar-fill"></div>
+                </div>
+            </div>
+            <div class="hud-box">
+                <div class="hud-title">Level</div>
+                <div id="hud-level" class="hud-value">1</div>
+            </div>
+            <div class="hud-box">
+                <div class="hud-title">Trash Cargo</div>
+                <div id="hud-cargo" class="hud-value">0/10</div>
+            </div>
+            <div class="hud-box">
+                <div class="hud-title">Coins</div>
+                <div id="hud-coins" class="hud-value" style="color:#ffcc00;">0</div>
+            </div>
+        </div>
+
+        <div id="boss-hud" class="hidden">
+            <div id="boss-name">BOSS: PLASTIC MONSTER</div>
+            <div class="boss-bar-container">
+                <div id="boss-bar" class="boss-bar-fill"></div>
+            </div>
+        </div>
+
+        <div id="first-boss-educational-modal" class="overlay hidden" style="z-index: 1000; touch-action: auto;">
+            <div class="story-card" style="width: 95%; max-width: 480px;">
+                <div class="story-header">🌊 BOSS 1 DEFEATED!</div>
+                <div id="boss-img-container" style="width: 100%; max-width: 400px; height: 160px; border: 3px solid #00ffcc; margin-bottom: 12px; border-radius: 4px; overflow: hidden; background: #050b12; display: flex; align-items: center; justify-content: center;">
+                    <img id="boss-educational-img" src="WhatsApp Image 2026-09-18 at 6.15.00 PM.jpeg" alt="Cauca River" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.style.display='none'; document.getElementById('boss-img-fallback').style.display='flex';">
+                    <div id="boss-img-fallback" style="display: none; width: 100%; height: 100%; color: #00ffcc; font-size: 0.5rem; text-align: center; padding: 10px; align-items: center; justify-content: center;">ENVIRONMENTAL IMPACT ON CAUCA RIVER</div>
+                </div>
+                <div class="story-content" style="max-height: 180px;">
+                    <p class="story-text" id="boss-story-text"></p>
+                </div>
+                <div class="story-controls">
+                    <button id="boss-modal-next-btn" class="btn" style="width: 100%;">READY!</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="second-boss-educational-modal" class="overlay hidden" style="z-index: 1000; touch-action: auto;">
+            <div class="story-card" style="width: 95%; max-width: 620px;">
+                <div class="story-header">🌊 BOSS 2 DEFEATED! • BANK & SLOPE CRISIS IN CAUCA</div>
+                <div style="width: 100%; max-width: 580px; height: 190px; border: 3px solid #00ffcc; margin-bottom: 12px; border-radius: 4px; overflow: hidden; background: #050b12; display: flex; align-items: center; justify-content: center;">
+                    <img src="WhatsApp Image 2026-09-18 at 6.13.18 PM.jpeg" alt="Bank and trash in Cauca river" style="width: 100%; height: 100%; object-fit: cover; object-position: center 35%; display: block;">
+                </div>
+                <div class="story-content" style="max-height: 140px;">
+                    <p class="story-text" id="second-boss-story-text"></p>
+                </div>
+                <div class="story-controls">
+                    <button id="second-boss-modal-next-btn" class="btn" style="width: 100%;">READY!</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="final-screen" class="overlay hidden" style="z-index: 1001;">
+            <div class="story-card" style="width: 95%; max-width: 480px; text-align: center; padding: 30px 20px;">
+                <h1 class="title" style="font-size: 1.1rem; color: #00ffcc; margin-bottom: 20px;">THANK YOU FOR YOUR HELP,<br>ECO-HERO!</h1>
+                <p style="font-size: 0.58rem; color: #fff; line-height: 1.8; margin-bottom: 30px;">You have completed the 2 levels and saved critical sectors of the Cauca river.</p>
+                <button id="btn-open-summary" class="btn" style="background: #ffcc00; color: #000; box-shadow: 4px 4px 0px #997700; width: 100%;">SUMMARY</button>
+            </div>
+        </div>
+
+        <div id="summary-screen" class="overlay hidden" style="z-index: 1002;">
+            <div class="summary-card">
+                <div class="summary-header">🌿 THANK YOU, ECO-HERO! 🌿</div>
+                
+                <div class="summary-triptych">
+                    <div class="panel-box">
+                        <div class="panel-tag">BEFORE</div>
+                        <div class="panel-img-wrap">
+                            <img src="WhatsApp Image 2026-09-18 at 6.15.00 PM.jpeg" alt="Before dirty" onerror="this.style.display='none';">
+                            <div class="bubble-overlay">Contaminated</div>
+                        </div>
+                    </div>
+                    <div class="panel-box">
+                        <div class="panel-tag">NOW</div>
+                        <div class="panel-img-wrap">
+                            <img src="WhatsApp Image 2026-09-18 at 6.13.18 PM.jpeg" alt="Now clean" onerror="this.style.display='none';">
+                            <div class="bubble-overlay">Purified</div>
+                        </div>
+                    </div>
+                    <div class="panel-box">
+                        <div class="panel-tag">NEW PATH</div>
+                        <div class="panel-img-wrap">
+                            <img src="WhatsApp Image 2026-09-18 at 6.13.18 PM.jpeg" alt="Next path" style="filter: hue-rotate(90deg);" onerror="this.style.display='none';">
+                            <div class="bubble-overlay">TOGETHER WE MAKE A DIFFERENCE</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-message-box">
+                    <p class="summary-message-text">
+                        Thank you so much for everything you've done, Eco-Hero.<br>
+                        Today we see how the Cauca River was and how, with your grain of sand, we can build a cleaner, safer, life-filled future for everyone.<br>
+                        Your effort makes a difference. Thank you for being part of the change!<br><br>
+                        <span style="color: #ffcc00; font-size: 0.48rem;">Next path: Andean basin watersheds & riparian reforestation!</span>
+                    </p>
+                </div>
+
+                <button id="final-thanks-btn" class="btn" style="background: #00cc66; color: #000; box-shadow: 4px 4px 0px #006633; width: 100%;">THANK YOU!</button>
+            </div>
+        </div>
+
+        <div id="game-over-screen" class="overlay hidden">
+            <h1 class="title" id="over-title">MISSION FAILED</h1>
+            <p id="over-stats" style="margin-bottom: 25px; color: #ccc; font-size: 0.58rem; line-height: 1.8;"></p>
+            <div class="btn-group">
+                <button id="restart-btn" class="btn">RETURN TO HUB</button>
+            </div>
+        </div>
+
+        <div id="touch-controls" class="hidden">
+            <div class="touch-group">
+                <div class="touch-btn" id="t-left">◀</div>
+                <div class="touch-btn" id="t-right">▶</div>
+            </div>
+            <div class="touch-group">
+                <div class="touch-btn" id="t-shoot" style="background: rgba(255,0,85,0.3); border-color:#ff0055;">🔫</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allPlayerData = {};
+        let currentPlayer = "ECO-HERO";
+        let gameData = {
+            coins: 0,
+            skin: 'classic',
+            unlockedSkins: ['classic'],
+            upgrades: { speed: 1, cargo: 1, mult: 1, cannon: 1, shield: 0 }
+        };
+
+        const SKIN_CONFIG = {
+            classic: { hull: '#0284c7', trim: '#ea580c', cabin: '#0369a1', light: '#38bdf8' },
+            emerald: { hull: '#059669', trim: '#34d399', cabin: '#047857', light: '#6ee7b7' },
+            gold:    { hull: '#b45309', trim: '#fbbf24', cabin: '#92400e', light: '#fde047' },
+            cyber:   { hull: '#db2777', trim: '#22d3ee', cabin: '#9d174d', light: '#a5f3fc' }
+        };
+
+        function addHighScore(name, sc, lvl) {
+            let lb = JSON.parse(localStorage.getItem('river_hero_leaderboard') || '[]');
+            lb.push({ name: name, score: sc, level: lvl });
+            lb.sort((a, b) => b.score - a.score);
+            lb = lb.slice(0, 10);
+            localStorage.setItem('river_hero_leaderboard', JSON.stringify(lb));
+        }
+
+        function populateTop10() {
+            const tbody = document.getElementById('top10-tbody');
+            tbody.innerHTML = '';
+            let lb = JSON.parse(localStorage.getItem('river_hero_leaderboard') || '[]');
+            if (lb.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 12px; color: #88aabb;">NO SCORES YET</td></tr>';
+                return;
+            }
+            lb.forEach((entry, idx) => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #1a3a4b';
+                tr.innerHTML = `
+                    <td style="padding: 6px 4px; color: #ffcc00;">#${idx + 1}</td>
+                    <td style="padding: 6px 4px;">${entry.name}</td>
+                    <td style="padding: 6px 4px; color: #00ffcc;">${entry.score}</td>
+                    <td style="padding: 6px 4px;">Lvl ${entry.level}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('cover-top10-btn').addEventListener('click', () => {
+            sfx.init();
+            sfx.playTone(600, 'sine', 0.1);
+            populateTop10();
+            const top10Screen = document.getElementById('top10-screen');
+            top10Screen.classList.remove('hidden');
+            top10Screen.classList.add('modal-animate');
+        });
+
+        document.getElementById('close-top10-btn').addEventListener('click', () => {
+            sfx.playTone(400, 'sine', 0.1);
+            const top10Screen = document.getElementById('top10-screen');
+            top10Screen.classList.add('hidden');
+            top10Screen.classList.remove('modal-animate');
+        });
+
+        function loadAllProfiles() {
+            const savedAll = localStorage.getItem('river_hero_profiles_en');
+            if (savedAll) {
+                allPlayerData = JSON.parse(savedAll);
+            }
+        }
+
+        function setPlayerProfile(name) {
+            currentPlayer = name.trim().toUpperCase() || "HERO";
+            if (!allPlayerData[currentPlayer]) {
+                allPlayerData[currentPlayer] = {
+                    coins: 0,
+                    skin: 'classic',
+                    unlockedSkins: ['classic'],
+                    upgrades: { speed: 1, cargo: 1, mult: 1, cannon: 1, shield: 0 }
+                };
+            }
+            gameData = allPlayerData[currentPlayer];
+            if (!gameData.skin) gameData.skin = 'classic';
+            if (!gameData.unlockedSkins) gameData.unlockedSkins = ['classic'];
+            if (!gameData.upgrades.cannon || gameData.upgrades.cannon < 1) {
+                gameData.upgrades.cannon = 1;
+            }
+            document.getElementById('hud-player-name').innerText = currentPlayer;
+            updateHubUI();
+        }
+
+        function saveData() {
+            allPlayerData[currentPlayer] = gameData;
+            localStorage.setItem('river_hero_profiles_en', JSON.stringify(allPlayerData));
+        }
+
+        class SoundFX {
+            constructor() { this.ctx = null; }
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+            playTone(freq, type, duration, vol=0.08) {
+                if (!this.ctx) return;
+                try {
+                    if (this.ctx.state === 'suspended') this.ctx.resume();
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + duration);
+                } catch(e) {}
+            }
+        }
+        const sfx = new SoundFX();
+
+        class RetroBGM {
+            constructor(audioSource) {
+                this.sfx = audioSource;
+                this.playing = false;
+                this.interval = null;
+                this.step = 0;
+                this.bassLine = [110, 110, 130, 98];
+                this.melody = [220, 261.63, 329.63, 261.63, 392, 329.63, 293.66, 246.94];
+            }
+            start() {
+                if (this.playing) return;
+                this.sfx.init();
+                if (!this.sfx.ctx) return;
+                this.playing = true;
+                this.step = 0;
+                this.interval = setInterval(() => {
+                    if (!this.playing) return;
+                    const bassFreq = this.bassLine[Math.floor(this.step / 2) % this.bassLine.length];
+                    const melodyFreq = this.melody[this.step % this.melody.length];
+                    if (this.step % 2 === 0) {
+                        this.sfx.playTone(bassFreq, 'triangle', 0.15, 0.05);
+                    }
+                    this.sfx.playTone(melodyFreq, 'square', 0.1, 0.03);
+                    this.step++;
+                }, 220);
+            }
+            stop() {
+                this.playing = false;
+                if (this.interval) clearInterval(this.interval);
+            }
+        }
+        const bgm = new RetroBGM(sfx);
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = 0, height = 0;
+        let bankWidth = 40;
+
+        function resize() {
+            const container = document.getElementById('game-container');
+            width = container.clientWidth;
+            height = container.clientHeight;
+            canvas.width = width;
+            canvas.height = height;
+            bankWidth = Math.max(25, width * 0.08);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let gameActive = false;
+        let purity = 100, cargo = 0, sessionCoins = 0, score = 0, currentLevel = 1;
+        let activeBoss = null;
+        let animId = null;
+        let scrollY = 0;
+        let lastShootTime = 0;
+
+        const boat = {
+            x: 0, y: 0, vx: 0, width: 44, height: 75,
+            speed: 0.5, friction: 0.88, shieldActive: false, tilt: 0
+        };
+
+        let obstacles = [];
+        let bullets = [];
+        let bossBullets = [];
+
+        const BOSS_DEFINITIONS = {
+            1: { name: "MOUNTAIN MUNCHER", hp: 60, color: "#5C3A21", shootRate: 0.035, type: 'muncher_main', pattern: 'normal' },
+            2: { name: "WASTE AMALGAM ALPHA", hp: 110, color: "#2E5A44", shootRate: 0.065, type: 'amalgam_alpha', pattern: 'spread' }
+        };
+
+        const storyPages = [
+            {
+                title: "1. THE VITAL ARTERY",
+                text: "For centuries, the majestic Cauca River nourished Colombia's valleys, giving life to thousands of communities and species.",
+                drawScene: (sCtx) => {
+                    sCtx.fillStyle = '#0284c7'; sCtx.fillRect(0,0,400,120);
+                    sCtx.fillStyle = '#38bdf8'; sCtx.fillRect(0,40,400,15); sCtx.fillRect(0,80,400,10);
+                    sCtx.fillStyle = '#f97316'; sCtx.fillRect(80,30,12,6); sCtx.fillRect(240,70,14,7);
+                    sCtx.fillStyle = '#fde047'; sCtx.fillRect(160,90,10,5);
+                    sCtx.fillStyle = '#15803d'; sCtx.fillRect(0,0,400,15); sCtx.fillRect(0,105,400,15);
+                }
+            },
+            {
+                title: "2. THE SILENT THREAT",
+                text: "Over time, thousands of tons of plastics, chemicals, and waste invaded its waters, dimming its shine.",
+                drawScene: (sCtx) => {
+                    sCtx.fillStyle = '#1e3a3a'; sCtx.fillRect(0,0,400,120);
+                    sCtx.fillStyle = '#2d5555'; sCtx.fillRect(0,50,400,20);
+                    sCtx.fillStyle = '#dc2626'; sCtx.fillRect(100,40,10,14);
+                    sCtx.fillStyle = '#2563eb'; sCtx.fillRect(220,65,12,12);
+                    sCtx.fillStyle = '#111827'; sCtx.beginPath(); sCtx.arc(160, 35, 10, 0, Math.PI*2); sCtx.fill();
+                    sCtx.fillStyle = '#16a34a'; sCtx.fillRect(300,50,8,16);
+                }
+            },
+            {
+                title: "3. THE RISE OF EVIL",
+                text: "Accumulated trash gave rise to monstrous toxic amalgams that dominate and choke the riverbed.",
+                drawScene: (sCtx) => {
+                    sCtx.fillStyle = '#0b131f'; sCtx.fillRect(0,0,400,120);
+                    sCtx.fillStyle = '#533c2a'; sCtx.beginPath(); sCtx.arc(200, 60, 42, 0, Math.PI*2); sCtx.fill();
+                    sCtx.fillStyle = '#dc2626'; sCtx.fillRect(180, 50, 10, 8); sCtx.fillRect(210, 50, 10, 8);
+                    sCtx.fillStyle = '#fde047'; sCtx.fillRect(183, 52, 4, 4); sCtx.fillRect(213, 52, 4, 4);
+                    sCtx.fillStyle = '#fff'; sCtx.fillRect(185, 75, 6, 8); sCtx.fillRect(197, 75, 6, 8); sCtx.fillRect(209, 75, 6, 8);
+                }
+            },
+            {
+                title: "4. THE RESCUE SHIP",
+                text: "High-tech cleaning vessel deployed. Use it to collect trash and purify the stream.",
+                drawScene: (sCtx) => {
+                    sCtx.fillStyle = '#112233'; sCtx.fillRect(0,0,400,120);
+                    sCtx.fillStyle = '#0284c7'; sCtx.fillRect(170, 35, 60, 50);
+                    sCtx.fillStyle = '#ea580c'; sCtx.fillRect(175, 45, 50, 30);
+                    sCtx.fillStyle = '#38bdf8'; sCtx.fillRect(185, 50, 30, 12);
+                    sCtx.strokeStyle = '#00ffcc'; sCtx.lineWidth = 3; sCtx.strokeRect(160, 25, 80, 70);
+                }
+            },
+            {
+                title: "5. YOUR MISSION BEGINS!",
+                text: "Use your water cannons to destroy the amalgams and recover Cauca's purity. The future depends on you!",
+                drawScene: (sCtx) => {
+                    sCtx.fillStyle = '#001a22'; sCtx.fillRect(0,0,400,120);
+                    sCtx.fillStyle = '#ff0055'; sCtx.font = '12px "Press Start 2P"'; sCtx.textAlign = 'center';
+                    sCtx.fillText("SAVE CAUCA RIVER!", 200, 65);
+                }
+            }
+        ];
+
+        let currentStoryPage = 0;
+        let storyTypewriterIndex = 0;
+        let storyTypewriterInterval = null;
+
+        function showStoryPage(pageIndex) {
+            currentStoryPage = pageIndex;
+            const page = storyPages[pageIndex];
+            document.getElementById('story-title').innerText = page.title;
+            document.getElementById('story-page-num').innerText = `PAGE ${pageIndex + 1} OF ${storyPages.length}`;
+            
+            const sCanvas = document.getElementById('story-canvas');
+            const sCtx = sCanvas.getContext('2d');
+            sCtx.clearRect(0,0,400,120);
+            page.drawScene(sCtx);
+
+            const textElement = document.getElementById('story-text');
+            textElement.innerText = "";
+            storyTypewriterIndex = 0;
+
+            if (storyTypewriterInterval) clearInterval(storyTypewriterInterval);
+
+            storyTypewriterInterval = setInterval(() => {
+                if (storyTypewriterIndex < page.text.length) {
+                    textElement.innerText += page.text.charAt(storyTypewriterIndex);
+                    storyTypewriterIndex++;
+                    if (storyTypewriterIndex % 2 === 0) sfx.playTone(450, 'square', 0.02);
+                } else {
+                    clearInterval(storyTypewriterInterval);
+                }
+            }, 25);
+
+            if (pageIndex === storyPages.length - 1) {
+                document.getElementById('story-next-btn').innerText = "▶ ENTER HUB";
+            } else {
+                document.getElementById('story-next-btn').innerText = "NEXT ▶";
+            }
+        }
+
+        const keys = { left: false, right: false, shoot: false };
+        window.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+            if (e.key === 'k' || e.key === 'K' || e.key === ' ' || e.code === 'Space') keys.shoot = true;
+        });
+        window.addEventListener('keyup', e => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+            if (e.key === 'k' || e.key === 'K' || e.code === 'Space') keys.shoot = false;
+        });
+
+        document.getElementById('t-left').addEventListener('touchstart', (e)=>{ e.preventDefault(); keys.left = true; });
+        document.getElementById('t-left').addEventListener('touchend', (e)=>{ e.preventDefault(); keys.left = false; });
+        document.getElementById('t-right').addEventListener('touchstart', (e)=>{ e.preventDefault(); keys.right = true; });
+        document.getElementById('t-right').addEventListener('touchend', (e)=>{ e.preventDefault(); keys.right = false; });
+        document.getElementById('t-shoot').addEventListener('touchstart', (e)=>{ e.preventDefault(); keys.shoot = true; });
+        document.getElementById('t-shoot').addEventListener('touchend', (e)=>{ e.preventDefault(); keys.shoot = false; });
+
+        function updateHubUI() {
+            document.getElementById('hub-coins').innerText = gameData.coins;
+            document.getElementById('lvl-cargo').innerText = gameData.upgrades.cargo;
+            document.getElementById('cost-cargo').innerText = gameData.upgrades.cargo * 50;
+            
+            document.getElementById('lvl-speed').innerText = gameData.upgrades.speed;
+            document.getElementById('cost-speed').innerText = gameData.upgrades.speed * 50;
+
+            document.getElementById('lvl-cannon').innerText = gameData.upgrades.cannon;
+            document.getElementById('cost-cannon').innerText = gameData.upgrades.cannon * 100;
+
+            document.getElementById('lvl-shield').innerText = gameData.upgrades.shield;
+            document.getElementById('cost-shield').innerText = gameData.upgrades.shield === 0 ? 150 : (gameData.upgrades.shield * 150);
+
+            document.getElementById('lvl-mult').innerText = gameData.upgrades.mult;
+            document.getElementById('cost-mult').innerText = gameData.upgrades.mult * 75;
+
+            updateSkinUI();
+        }
+
+        function updateSkinUI() {
+            const skins = ['classic', 'emerald', 'gold', 'cyber'];
+            const costs = { classic: 0, emerald: 100, gold: 250, cyber: 400 };
+            skins.forEach(skinKey => {
+                const btn = document.getElementById(`skin-btn-${skinKey}`);
+                if (!btn) return;
+                if (gameData.skin === skinKey) {
+                    btn.innerText = "EQUIPPED";
+                    btn.style.background = "#00cc66";
+                } else if (gameData.unlockedSkins.includes(skinKey)) {
+                    btn.innerText = "EQUIP";
+                    btn.style.background = "#ffcc00";
+                } else {
+                    btn.innerText = `Buy (🪙 ${costs[skinKey]})`;
+                    btn.style.background = "#ffcc00";
+                }
+            });
+        }
+
+        function equipSkin(skinName) {
+            if (gameData.unlockedSkins.includes(skinName)) {
+                gameData.skin = skinName;
+                saveData();
+                updateSkinUI();
+                sfx.playTone(750, 'square', 0.1);
+            }
+        }
+
+        function handleSkinAction(skinName, cost) {
+            if (gameData.unlockedSkins.includes(skinName)) {
+                equipSkin(skinName);
+            } else if (gameData.coins >= cost) {
+                gameData.coins -= cost;
+                gameData.unlockedSkins.push(skinName);
+                gameData.skin = skinName;
+                saveData();
+                updateHubUI();
+                sfx.playTone(900, 'square', 0.2);
+            }
+        }
+
+        function buyUpgrade(type) {
+            const costs = {
+                cargo: gameData.upgrades.cargo * 50,
+                speed: gameData.upgrades.speed * 50,
+                cannon: gameData.upgrades.cannon * 100,
+                shield: gameData.upgrades.shield === 0 ? 150 : gameData.upgrades.shield * 150,
+                mult: gameData.upgrades.mult * 75
+            };
+
+            if (gameData.coins >= costs[type]) {
+                gameData.coins -= costs[type];
+                gameData.upgrades[type]++;
+                saveData();
+                updateHubUI();
+                sfx.playTone(600, 'square', 0.15);
+            }
+        }
+
+        document.getElementById('cover-play-btn').addEventListener('click', () => {
+            sfx.init();
+            document.getElementById('cover-screen').classList.add('hidden');
+            const nameScreen = document.getElementById('name-screen');
+            nameScreen.classList.remove('hidden');
+            nameScreen.classList.add('modal-animate');
+            document.getElementById('player-name-input').focus();
+        });
+
+        const handleNameConfirm = () => {
+            const nameInput = document.getElementById('player-name-input').value.trim();
+            setPlayerProfile(nameInput || "ECO-HERO");
+            sfx.playTone(650, 'sine', 0.1);
+            document.getElementById('name-screen').classList.add('hidden');
+            document.getElementById('story-screen').classList.remove('hidden');
+            showStoryPage(0);
+        };
+
+        document.getElementById('name-confirm-btn').addEventListener('click', handleNameConfirm);
+        document.getElementById('player-name-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleNameConfirm();
+        });
+
+        document.getElementById('story-next-btn').addEventListener('click', () => {
+            const page = storyPages[currentStoryPage];
+            if (storyTypewriterIndex < page.text.length) {
+                if (storyTypewriterInterval) clearInterval(storyTypewriterInterval);
+                document.getElementById('story-text').innerText = page.text;
+                storyTypewriterIndex = page.text.length;
+                return;
+            }
+
+            sfx.playTone(500, 'sine', 0.08);
+            if (currentStoryPage < storyPages.length - 1) {
+                showStoryPage(currentStoryPage + 1);
+            } else {
+                document.getElementById('story-screen').classList.add('hidden');
+                document.getElementById('hub-screen').classList.remove('hidden');
+                updateHubUI();
+            }
+        });
+
+        document.getElementById('back-cover-btn').addEventListener('click', () => {
+            bgm.stop();
+            document.getElementById('hub-screen').classList.add('hidden');
+            document.getElementById('cover-screen').classList.remove('hidden');
+        });
+
+        document.getElementById('start-mission-btn').addEventListener('click', startMission);
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            bgm.stop();
+            document.getElementById('game-over-screen').classList.add('hidden');
+            document.getElementById('hub-screen').classList.remove('hidden');
+            updateHubUI();
+        });
+
+        let bossTypewriterIndex = 0;
+        let bossTypewriterInterval = null;
+        const bossEducationalText = "Look at how the Cauca River has suffered due to mercury and pollution.\n\nIllegal mining and toxic waste dumping severely damage its waters, destroying aquatic biodiversity and putting local riverbank communities at high risk.";
+
+        function triggerBossEducationalModal() {
+            gameActive = false;
+            bgm.stop();
+            if (animId) cancelAnimationFrame(animId);
+
+            const modal = document.getElementById('first-boss-educational-modal');
+            const textElement = document.getElementById('boss-story-text');
+            const imgEl = document.getElementById('boss-educational-img');
+
+            if (imgEl) {
+                imgEl.style.display = 'block';
+                const fallback = document.getElementById('boss-img-fallback');
+                if (fallback) fallback.style.display = 'none';
+            }
+
+            textElement.innerText = "";
+            bossTypewriterIndex = 0;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('modal-animate');
+
+            if (bossTypewriterInterval) clearInterval(bossTypewriterInterval);
+
+            bossTypewriterInterval = setInterval(() => {
+                if (bossTypewriterIndex < bossEducationalText.length) {
+                    textElement.innerText += bossEducationalText.charAt(bossTypewriterIndex);
+                    bossTypewriterIndex++;
+                    if (bossTypewriterIndex % 2 === 0) sfx.playTone(450, 'square', 0.02);
+                } else {
+                    clearInterval(bossTypewriterInterval);
+                }
+            }, 25);
+        }
+
+        const handleBossModalClose = () => {
+            const textElement = document.getElementById('boss-story-text');
+            if (bossTypewriterIndex < bossEducationalText.length) {
+                if (bossTypewriterInterval) clearInterval(bossTypewriterInterval);
+                textElement.innerText = bossEducationalText;
+                bossTypewriterIndex = bossEducationalText.length;
+                return;
+            }
+
+            sfx.playTone(500, 'sine', 0.08);
+            const modal = document.getElementById('first-boss-educational-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('modal-animate');
+            gameActive = true;
+            bgm.start();
+            gameLoop();
+        };
+
+        const bossModalBtn = document.getElementById('boss-modal-next-btn');
+        bossModalBtn.addEventListener('click', handleBossModalClose);
+        bossModalBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            handleBossModalClose();
+        }, { passive: false });
+
+        let secondBossTypewriterIndex = 0;
+        let secondBossTypewriterInterval = null;
+        const secondBossEducationalText = "Attention! River banks and slopes in the Cauca River suffer severe erosion from massive accumulation of debris, tires, and domestic/industrial waste.\n\nThis collapse weakens the natural channel, increasing flash flood risks and smothering the riparian ecosystem.";
+
+        function triggerSecondBossEducationalModal() {
+            gameActive = false;
+            bgm.stop();
+            if (animId) cancelAnimationFrame(animId);
+
+            const modal = document.getElementById('second-boss-educational-modal');
+            const textElement = document.getElementById('second-boss-story-text');
+
+            textElement.innerText = "";
+            secondBossTypewriterIndex = 0;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('modal-animate');
+
+            if (secondBossTypewriterInterval) clearInterval(secondBossTypewriterInterval);
+
+            secondBossTypewriterInterval = setInterval(() => {
+                if (secondBossTypewriterIndex < secondBossEducationalText.length) {
+                    textElement.innerText += secondBossEducationalText.charAt(secondBossTypewriterIndex);
+                    secondBossTypewriterIndex++;
+                    if (secondBossTypewriterIndex % 2 === 0) sfx.playTone(450, 'square', 0.02);
+                } else {
+                    clearInterval(secondBossTypewriterInterval);
+                }
+            }, 25);
+        }
+
+        function showFinalScreen() {
+            gameActive = false;
+            bgm.stop();
+            if (animId) cancelAnimationFrame(animId);
+
+            addHighScore(currentPlayer, score, currentLevel);
+            gameData.coins += sessionCoins;
+            saveData();
+
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('touch-controls').classList.add('hidden');
+            document.getElementById('boss-hud').classList.add('hidden');
+            
+            const finalScreen = document.getElementById('final-screen');
+            finalScreen.classList.remove('hidden');
+            finalScreen.classList.add('modal-animate');
+            sfx.playTone(900, 'sine', 0.3);
+        }
+
+        const handleSecondBossModalClose = () => {
+            const textElement = document.getElementById('second-boss-story-text');
+            if (secondBossTypewriterIndex < secondBossEducationalText.length) {
+                if (secondBossTypewriterInterval) clearInterval(secondBossTypewriterInterval);
+                textElement.innerText = secondBossEducationalText;
+                secondBossTypewriterIndex = secondBossEducationalText.length;
+                return;
+            }
+
+            sfx.playTone(500, 'sine', 0.08);
+            const modal = document.getElementById('second-boss-educational-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('modal-animate');
+            
+            showFinalScreen();
+        };
+
+        const secondBossModalBtn = document.getElementById('second-boss-modal-next-btn');
+        secondBossModalBtn.addEventListener('click', handleSecondBossModalClose);
+        secondBossModalBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            handleSecondBossModalClose();
+        }, { passive: false });
+
+        document.getElementById('btn-open-summary').addEventListener('click', () => {
+            sfx.playTone(700, 'triangle', 0.15);
+            document.getElementById('final-screen').classList.add('hidden');
+            const summaryScreen = document.getElementById('summary-screen');
+            summaryScreen.classList.remove('hidden');
+            summaryScreen.classList.add('modal-animate');
+        });
+
+        document.getElementById('final-thanks-btn').addEventListener('click', () => {
+            sfx.playTone(1000, 'sine', 0.2);
+            document.getElementById('summary-screen').classList.add('hidden');
+            document.getElementById('hub-screen').classList.remove('hidden');
+            updateHubUI();
+        });
+
+        function shootBullet() {
+            if (!gameActive || gameData.upgrades.cannon <= 0) return;
+            const now = Date.now();
+            if (now - lastShootTime > 140) {
+                bullets.push({ x: boat.x, y: height - 110, speed: 12 });
+                sfx.playTone(850, 'square', 0.04);
+                lastShootTime = now;
+            }
+        }
+
+        function startMission() {
+            purity = 100;
+            cargo = 0;
+            sessionCoins = 0;
+            score = 0;
+            currentLevel = 1;
+            obstacles = [];
+            bullets = [];
+            bossBullets = [];
+            activeBoss = null;
+
+            boat.x = width / 2;
+            boat.speed = 0.5 + (gameData.upgrades.speed * 0.15);
+            boat.shieldActive = gameData.upgrades.shield > 0;
+
+            document.getElementById('hub-screen').classList.add('hidden');
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('touch-controls').classList.remove('hidden');
+            document.getElementById('boss-hud').classList.add('hidden');
+            document.getElementById('final-screen').classList.add('hidden');
+            document.getElementById('summary-screen').classList.add('hidden');
+
+            gameActive = true;
+            bgm.start();
+            gameLoop();
+        }
+
+        function spawnEntities() {
+            if (activeBoss) return;
+
+            if (Math.random() < 0.04) {
+                const types = ['trash', 'rock', 'coin', 'buoy'];
+                const selected = types[Math.floor(Math.random() * types.length)];
+                
+                let subType = 0;
+                if (selected === 'trash') subType = Math.floor(Math.random() * 4);
+
+                obstacles.push({
+                    x: bankWidth + 20 + Math.random() * (width - bankWidth * 2 - 50),
+                    y: -40,
+                    width: selected === 'trash' ? 34 : 30,
+                    height: selected === 'trash' ? 34 : 30,
+                    type: selected,
+                    subType: subType
+                });
+            }
+
+            if (score > currentLevel * 350 && !activeBoss) {
+                const bInfo = BOSS_DEFINITIONS[currentLevel] || BOSS_DEFINITIONS;
+
+                activeBoss = {
+                    x: width / 2 - 90,
+                    y: -200,
+                    targetY: 60,
+                    width: 180,
+                    height: 160,
+                    hp: bInfo.hp,
+                    maxHp: bInfo.hp,
+                    color: bInfo.color,
+                    name: bInfo.name,
+                    shootRate: bInfo.shootRate,
+                    bossType: bInfo.type,
+                    pattern: bInfo.pattern,
+                    dir: currentLevel === 2 ? 2.5 : 1.8,
+                    attackTimer: 0
+                };
+                document.getElementById('boss-hud').classList.remove('hidden');
+                document.getElementById('boss-name').innerText = `BOSS: ${activeBoss.name}`;
+            }
+        }
+
+        function update() {
+            if (!gameActive) return;
+
+            scrollY += 1.2;
+
+            if (keys.left) {
+                boat.vx -= boat.speed;
+                boat.tilt = -0.1;
+            } else if (keys.right) {
+                boat.vx += boat.speed;
+                boat.tilt = 0.1;
+            } else {
+                boat.tilt *= 0.8;
+            }
+
+            if (keys.shoot) shootBullet();
+
+            boat.vx *= boat.friction;
+            boat.x += boat.vx;
+
+            if (boat.x < bankWidth + 25) boat.x = bankWidth + 25;
+            if (boat.x > width - bankWidth - 25) boat.x = width - bankWidth - 25;
+
+            spawnEntities();
+
+            const maxCap = 6 + (gameData.upgrades.cargo * 3);
+            const coinMult = gameData.upgrades.mult;
+
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                bullets[i].y -= bullets[i].speed;
+                if (bullets[i].y < -10) bullets.splice(i, 1);
+            }
+
+            if (activeBoss) {
+                if (activeBoss.y < activeBoss.targetY) activeBoss.y += 2;
+                activeBoss.x += activeBoss.dir;
+                if (activeBoss.x < bankWidth + 10 || activeBoss.x + activeBoss.width > width - bankWidth - 10) {
+                    activeBoss.dir *= -1;
+                }
+
+                activeBoss.attackTimer++;
+                const shouldShootSpread = (activeBoss.pattern === 'spread' && activeBoss.attackTimer % 45 === 0) || 
+                                          (activeBoss.pattern !== 'spread' && Math.random() < activeBoss.shootRate);
+
+                if (shouldShootSpread) {
+                    const cx = activeBoss.x + activeBoss.width / 2;
+                    const cy = activeBoss.y + activeBoss.height - 30;
+                    
+                    if (activeBoss.pattern === 'spread') {
+                        [-2.5, 0, 2.5].forEach(vxOffset => {
+                            bossBullets.push({
+                                x: cx,
+                                y: cy,
+                                vx: vxOffset,
+                                vy: 5.6
+                            });
+                        });
+                        sfx.playTone(220, 'sawtooth', 0.08);
+                    } else {
+                        bossBullets.push({
+                            x: cx + (Math.random() * 40 - 20),
+                            y: cy,
+                            vx: (Math.random() - 0.5) * 4.5,
+                            vy: 4.8
+                        });
+                    }
+                }
+
+                for (let i = bullets.length - 1; i >= 0; i--) {
+                    let b = bullets[i];
+                    if (b.x > activeBoss.x && b.x < activeBoss.x + activeBoss.width &&
+                        b.y > activeBoss.y && b.y < activeBoss.y + activeBoss.height) {
+                        
+                        activeBoss.hp -= (1 + gameData.upgrades.cannon * 0.5);
+                        bullets.splice(i, 1);
+                        sfx.playTone(300, 'sawtooth', 0.04);
+
+                        if (activeBoss.hp <= 0) {
+                            score += 500;
+                            sessionCoins += 50 * coinMult;
+                            activeBoss = null;
+                            const defeatedLevel = currentLevel;
+                            currentLevel++;
+                            document.getElementById('boss-hud').classList.add('hidden');
+                            sfx.playTone(900, 'sine', 0.4);
+
+                            if (defeatedLevel === 1) {
+                                triggerBossEducationalModal();
+                            } else if (defeatedLevel === 2) {
+                                triggerSecondBossEducationalModal();
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            for (let i = bossBullets.length - 1; i >= 0; i--) {
+                let bb = bossBullets[i];
+                bb.x += bb.vx;
+                bb.y += bb.vy;
+
+                if (Math.abs(boat.x - bb.x) < 25 && Math.abs((height - 90) - bb.y) < 30) {
+                    if (boat.shieldActive) {
+                        boat.shieldActive = false;
+                        sfx.playTone(400, 'sine', 0.2);
+                    } else {
+                        purity -= currentLevel === 2 ? 18 : 15;
+                        sfx.playTone(150, 'sawtooth', 0.2);
+                    }
+                    bossBullets.splice(i, 1);
+                } else if (bb.y > height) {
+                    bossBullets.splice(i, 1);
+                }
+            }
+
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.y += 2.2 + (currentLevel * 0.3);
+
+                if (Math.abs(boat.x - (obs.x + obs.width/2)) < 25 && Math.abs((height - 90) - (obs.y + obs.height/2)) < 30) {
+                    if (obs.type === 'trash') {
+                        if (cargo < maxCap) {
+                            cargo++;
+                            score += 30;
+                            sfx.playTone(520, 'square', 0.08);
+                            obstacles.splice(i, 1);
+                        }
+                    } else if (obs.type === 'coin') {
+                        sessionCoins += (1 * coinMult);
+                        sfx.playTone(880, 'sine', 0.1);
+                        obstacles.splice(i, 1);
+                    } else if (obs.type === 'buoy') {
+                        if (cargo > 0) {
+                            purity = Math.min(100, purity + cargo * 6);
+                            sessionCoins += cargo * 3 * coinMult;
+                            cargo = 0;
+                            sfx.playTone(700, 'triangle', 0.2);
+                        }
+                    } else if (obs.type === 'rock') {
+                        if (boat.shieldActive) {
+                            boat.shieldActive = false;
+                        } else {
+                            purity -= 12;
+                        }
+                        sfx.playTone(120, 'sawtooth', 0.2);
+                        obstacles.splice(i, 1);
+                    }
+                } else if (obs.y > height + 40) {
+                    if (obs.type === 'trash') purity -= 3;
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            purity -= 0.012 * currentLevel;
+            score += 1;
+
+            document.getElementById('hud-cargo').innerText = `${cargo}/${maxCap}`;
+            document.getElementById('hud-coins').innerText = sessionCoins;
+            document.getElementById('hud-level').innerText = currentLevel;
+            document.getElementById('purity-bar').style.width = `${Math.max(0, purity)}%`;
+
+            if (activeBoss) {
+                const pct = Math.max(0, (activeBoss.hp / activeBoss.maxHp) * 100);
+                document.getElementById('boss-bar').style.width = `${pct}%`;
+            }
+
+            if (purity <= 0) endGame();
+        }
+
+        function drawPixelRiver(ctx) {
+            ctx.fillStyle = '#226068';
+            ctx.fillRect(0, 0, width, height);
+
+            const loopHeight = 1000;
+            const cy = (scrollY % loopHeight);
+
+            ctx.fillStyle = '#469b9b';
+            const ripples = [
+                {x: width * 0.45, y: -200 + cy, w: 40},
+                {x: width * 0.70, y: -120 + cy, w: 25},
+                {x: width * 0.25, y: 50 + cy, w: 35},
+                {x: width * 0.55, y: 180 + cy, w: 50},
+                {x: width * 0.35, y: 320 + cy, w: 30},
+                {x: width * 0.75, y: 450 + cy, w: 40},
+                {x: width * 0.20, y: 600 + cy, w: 25},
+                {x: width * 0.60, y: 780 + cy, w: 45},
+                {x: width * 0.40, y: 900 + cy, w: 30},
+                {x: width * 0.45, y: -200 + cy - loopHeight, w: 40},
+                {x: width * 0.70, y: -120 + cy - loopHeight, w: 25},
+                {x: width * 0.25, y: 50 + cy - loopHeight, w: 35},
+                {x: width * 0.55, y: 180 + cy - loopHeight, w: 50},
+                {x: width * 0.35, y: 320 + cy - loopHeight, w: 30},
+                {x: width * 0.75, y: 450 + cy - loopHeight, w: 40},
+                {x: width * 0.20, y: 600 + cy - loopHeight, w: 25},
+                {x: width * 0.60, y: 780 + cy - loopHeight, w: 45},
+                {x: width * 0.40, y: 900 + cy - loopHeight, w: 30}
+            ];
+
+            ripples.forEach(r => {
+                ctx.fillRect(r.x, r.y, r.w, 3);
+                ctx.fillRect(r.x + 4, r.y + 3, r.w - 8, 2);
+            });
+
+            const algas = [
+                {x: width * 0.22, y: -150 + cy},
+                {x: width * 0.78, y: 20 + cy},
+                {x: width * 0.68, y: 250 + cy},
+                {x: width * 0.25, y: 480 + cy},
+                {x: width * 0.75, y: 720 + cy},
+                {x: width * 0.30, y: 880 + cy},
+                {x: width * 0.22, y: -150 + cy - loopHeight},
+                {x: width * 0.78, y: 20 + cy - loopHeight},
+                {x: width * 0.68, y: 250 + cy - loopHeight},
+                {x: width * 0.25, y: 480 + cy - loopHeight},
+                {x: width * 0.75, y: 720 + cy - loopHeight},
+                {x: width * 0.30, y: 880 + cy - loopHeight}
+            ];
+            algas.forEach(a => drawAlgaeCluster(ctx, a.x, a.y));
+
+            const troncos = [
+                {x: width * 0.35, y: -80 + cy, rot: -0.1},
+                {x: width * 0.50, y: 380 + cy, rot: 0.15},
+                {x: width * 0.28, y: 650 + cy, rot: -0.05},
+                {x: width * 0.35, y: -80 + cy - loopHeight, rot: -0.1},
+                {x: width * 0.50, y: 380 + cy - loopHeight, rot: 0.15},
+                {x: width * 0.28, y: 650 + cy - loopHeight, rot: -0.05}
+            ];
+            troncos.forEach(t => drawSunkenLog(ctx, t.x, t.y, t.rot));
+
+            const bancos = [
+                {x: width * 0.32, y: 120 + cy},
+                {x: width * 0.68, y: 550 + cy},
+                {x: width * 0.32, y: 120 + cy - loopHeight},
+                {x: width * 0.68, y: 550 + cy - loopHeight}
+            ];
+            bancos.forEach(b => drawSandBank(ctx, b.x, b.y));
+
+            const rocas = [
+                {x: width * 0.72, y: -180 + cy},
+                {x: width * 0.28, y: 300 + cy},
+                {x: width * 0.62, y: 280 + cy},
+                {x: width * 0.76, y: 820 + cy},
+                {x: width * 0.72, y: -180 + cy - loopHeight},
+                {x: width * 0.28, y: 300 + cy - loopHeight},
+                {x: width * 0.62, y: 280 + cy - loopHeight},
+                {x: width * 0.76, y: 820 + cy - loopHeight}
+            ];
+            rocas.forEach(r => drawRockCluster(ctx, r.x, r.y));
+
+            ctx.fillStyle = '#181b3d';
+            ctx.fillRect(0, 0, bankWidth, height);
+            ctx.fillRect(width - bankWidth, 0, bankWidth, height);
+
+            ctx.fillStyle = '#2f3b6d';
+            const edgeStep = 20;
+            const edgeOffset = Math.floor(scrollY) % edgeStep;
+            for (let y = -edgeStep; y < height + edgeStep; y += edgeStep) {
+                let py = y + edgeOffset;
+                ctx.fillRect(bankWidth - 4, py, 4, 10);
+                ctx.fillRect(width - bankWidth, py + 10, 4, 10);
+            }
+        }
+
+        function drawAlgaeCluster(ctx, x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.fillStyle = '#154238';
+            ctx.fillRect(-12, -20, 24, 40);
+            ctx.fillStyle = '#3eb370';
+            ctx.fillRect(-10, -22, 6, 28);
+            ctx.fillRect(-12, -18, 10, 8);
+            ctx.fillRect(-2, -26, 6, 32);
+            ctx.fillRect(0, -20, 8, 10);
+            ctx.fillRect(6, -20, 6, 24);
+            ctx.fillRect(4, -14, 10, 8);
+            ctx.fillStyle = '#73e6a0';
+            ctx.fillRect(-8, -20, 2, 12);
+            ctx.fillRect(0, -24, 2, 16);
+            ctx.fillRect(8, -18, 2, 10);
+            ctx.restore();
+        }
+
+        function drawSunkenLog(ctx, x, y, rot) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rot);
+            ctx.fillStyle = '#469b9b';
+            ctx.fillRect(-65, -18, 130, 36);
+            ctx.fillStyle = '#13282a';
+            ctx.fillRect(-60, -12, 120, 26);
+            ctx.fillStyle = '#2d4b43';
+            ctx.fillRect(-58, -10, 116, 20);
+            ctx.fillStyle = '#1c332d';
+            ctx.fillRect(-40, -6, 35, 3);
+            ctx.fillRect(10, 2, 40, 3);
+            ctx.fillRect(-20, 4, 20, 3);
+            ctx.fillStyle = '#3a5e55';
+            ctx.fillRect(52, -8, 4, 16);
+            ctx.fillRect(-56, -8, 4, 16);
+            ctx.restore();
+        }
+
+        function drawSandBank(ctx, x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.fillStyle = '#469b9b';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 65, 32, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#d0b878';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 56, 24, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#9c8248';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.fillStyle = '#3c4e5a';
+            ctx.fillRect(-15, -6, 12, 8);
+            ctx.fillRect(-2, 4, 10, 6);
+            ctx.fillRect(18, -2, 8, 5);
+            ctx.fillStyle = '#6b7f8c';
+            ctx.fillRect(-14, -6, 10, 3);
+            ctx.fillRect(-1, 4, 8, 2);
+            ctx.restore();
+        }
+
+        function drawRockCluster(ctx, x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.fillStyle = '#469b9b';
+            ctx.fillRect(-25, -18, 50, 36);
+            ctx.fillStyle = '#2d3b45';
+            ctx.fillRect(-18, -12, 24, 22);
+            ctx.fillStyle = '#4b5e6b';
+            ctx.fillRect(-16, -10, 20, 18);
+            ctx.fillStyle = '#788e9c';
+            ctx.fillRect(-14, -10, 10, 5);
+            ctx.fillStyle = '#2d3b45';
+            ctx.fillRect(4, -2, 16, 14);
+            ctx.fillStyle = '#4b5e6b';
+            ctx.fillRect(6, 0, 12, 10);
+            ctx.fillStyle = '#2d3b45';
+            ctx.fillRect(-8, 8, 10, 8);
+            ctx.fillStyle = '#4b5e6b';
+            ctx.fillRect(-7, 9, 7, 5);
+            ctx.restore();
+        }
+
+        function drawBossEntity(ctx, boss) {
+            if (boss.bossType === 'amalgam_alpha') {
+                drawAmalgamAlphaBoss(ctx, boss);
+            } else {
+                drawMountainMuncherBoss(ctx, boss);
+            }
+        }
+
+        function drawAmalgamAlphaBoss(ctx, boss) {
+            ctx.save();
+            ctx.translate(boss.x + boss.width / 2, boss.y + boss.height / 2);
+            const scale = boss.width / 180;
+            ctx.scale(scale, scale);
+
+            ctx.fillStyle = 'rgba(0,100,50,0.5)';
+            ctx.beginPath();
+            ctx.ellipse(0, 70, 90, 28, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#064e3b';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 85, 68, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#059669';
+            ctx.beginPath();
+            ctx.ellipse(0, -5, 75, 58, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#10b981';
+            ctx.fillRect(-60, 20, 24, 38);
+            ctx.fillRect(36, 25, 24, 34);
+            ctx.fillRect(-15, 35, 30, 26);
+
+            drawGlowingRedEye(ctx, -32, -22, 18, 14, true);
+            drawGlowingRedEye(ctx, 32, -22, 18, 14, false);
+            drawGlowingRedEye(ctx, 0, -38, 12, 10, true);
+
+            ctx.fillStyle = '#022c22';
+            ctx.beginPath();
+            ctx.ellipse(0, 18, 52, 22, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#a7f3d0';
+            [-36, -22, -8, 8, 22, 36].forEach(tx => {
+                ctx.fillRect(tx - 4, 10, 8, 10);
+                ctx.fillRect(tx - 4, 22, 8, 10);
+            });
+
+            ctx.restore();
+        }
+
+        function drawMountainMuncherBoss(ctx, boss) {
+            ctx.save();
+            ctx.translate(boss.x + boss.width / 2, boss.y + boss.height / 2);
+
+            const scale = boss.width / 180;
+            ctx.scale(scale, scale);
+
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.beginPath();
+            ctx.ellipse(0, 65, 85, 25, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#110b08';
+            ctx.beginPath();
+            ctx.ellipse(0, 5, 88, 68, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(-85, 10, 170, 55);
+
+            ctx.fillStyle = '#533c2a';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 82, 62, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#6b4f38';
+            ctx.fillRect(-70, -30, 140, 75);
+            ctx.fillRect(-50, -50, 100, 30);
+
+            ctx.fillStyle = '#836347';
+            ctx.fillRect(-40, -52, 80, 20);
+            ctx.fillRect(-25, -58, 50, 12);
+
+            drawPixelTire(ctx, -72, 35, 0.9, -0.2);
+            drawPixelTire(ctx, 42, 38, 0.95, 0.3);
+            drawPixelTire(ctx, -38, 48, 0.8, 0.1);
+
+            ctx.fillStyle = '#22272d';
+            ctx.fillRect(-92, -10, 16, 45);
+            ctx.fillStyle = '#616c78';
+            for (let y = -8; y <= 30; y += 8) {
+                ctx.fillRect(-92, y, 16, 4);
+            }
+            ctx.fillStyle = '#94a3b8';
+            for (let y = -8; y <= 30; y += 8) {
+                ctx.fillRect(-90, y + 1, 12, 2);
+            }
+
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(70, -10);
+            ctx.bezierCurveTo(90, -5, 90, 15, 72, 20);
+            ctx.bezierCurveTo(90, 25, 90, 45, 75, 50);
+            ctx.stroke();
+
+            drawPixelCan(ctx, -22, 38, '#dc2626', '#ffffff', 0.2);
+            drawPixelCan(ctx, -56, 15, '#2563eb', '#60a5fa', -0.35);
+            drawPixelCan(ctx, 48, 12, '#ea580c', '#fde047', 0.25);
+            drawPixelBottle(ctx, 22, 28, '#16a34a', -0.4);
+            drawPixelBottle(ctx, 35, -35, '#15803d', 0.5);
+
+            ctx.fillStyle = '#1e3a8a';
+            ctx.beginPath();
+            ctx.arc(-65, 42, 14, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#3b82f6';
+            ctx.fillRect(-68, 32, 8, 5);
+
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(-18, -68, 10, 22);
+            ctx.fillRect(-5, -72, 8, 25);
+            ctx.fillRect(12, -65, 9, 20);
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(-16, -68, 4, 22);
+            ctx.fillRect(-3, -72, 3, 25);
+
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(0, -82, 4, 25);
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(2, -84, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(0, -86, 4, 4);
+
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(-55, -45, 12, 22);
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(-49, -45, 6, Math.PI, 0);
+            ctx.fill();
+
+            ctx.fillStyle = '#0a0302';
+            ctx.beginPath();
+            ctx.moveTo(-52, -2);
+            ctx.quadraticCurveTo(0, -18, 52, -2);
+            ctx.quadraticCurveTo(0, 48, -52, -2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#280c07';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            ctx.fillStyle = '#fffbeb';
+            const topTeethX = [-40, -30, -20, -10, 0, 10, 20, 30, 40];
+            topTeethX.forEach(tx => {
+                ctx.beginPath();
+                ctx.moveTo(tx - 4, -8);
+                ctx.lineTo(tx, 12);
+                ctx.lineTo(tx + 4, -8);
+                ctx.closePath();
+                ctx.fill();
+            });
+
+            const botTeethX = [-40, -30, -20, -10, 0, 10, 20, 30, 40];
+            botTeethX.forEach(tx => {
+                ctx.beginPath();
+                ctx.moveTo(tx - 4, 24);
+                ctx.lineTo(tx, 2);
+                ctx.lineTo(tx + 4, 24);
+                ctx.closePath();
+                ctx.fill();
+            });
+
+            ctx.fillStyle = '#fef3c7';
+            topTeethX.forEach(tx => ctx.fillRect(tx - 1, -4, 2, 8));
+
+            drawGlowingRedEye(ctx, -26, -24, 16, 12, true);
+            drawGlowingRedEye(ctx, 26, -24, 16, 12, false);
+
+            ctx.restore();
+        }
+
+        function drawGlowingRedEye(ctx, x, y, rx, ry, isLeft) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rx + 3, ry + 3, isLeft ? 0.2 : -0.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#7f1d1d';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rx, ry, isLeft ? 0.2 : -0.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rx - 3, ry - 2, isLeft ? 0.2 : -0.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.ellipse(isLeft ? 2 : -2, 0, rx - 8, ry - 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(isLeft ? 1 : -3, -2, 3, 3);
+
+            ctx.restore();
+        }
+
+        function drawPixelCan(ctx, x, y, colorMain, colorBand, angle) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(-10, -16, 20, 32);
+
+            ctx.fillStyle = colorMain;
+            ctx.fillRect(-8, -14, 16, 28);
+
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillRect(-8, -14, 16, 4);
+            ctx.fillRect(-8, 10, 16, 4);
+
+            ctx.fillStyle = colorBand;
+            ctx.fillRect(-8, -4, 16, 8);
+
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.fillRect(-6, -12, 3, 24);
+
+            ctx.restore();
+        }
+
+        function drawPixelBottle(ctx, x, y, color, angle) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+
+            ctx.fillStyle = '#052e16';
+            ctx.fillRect(-8, -10, 16, 26);
+            ctx.fillRect(-4, -20, 8, 12);
+
+            ctx.fillStyle = color;
+            ctx.fillRect(-6, -8, 12, 22);
+            ctx.fillRect(-3, -18, 6, 12);
+
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(-3, -20, 6, 3);
+
+            ctx.fillStyle = 'rgba(255,255,255,0.45)';
+            ctx.fillRect(-4, -6, 3, 18);
+
+            ctx.restore();
+        }
+
+        function drawPixelTire(ctx, x, y, scale, angle) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.scale(scale, scale);
+
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 22, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#334155';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 18, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#020617';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 10, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawDetailedBoat(ctx, x, y, tilt, skinName) {
+            const colors = SKIN_CONFIG[skinName || gameData.skin || 'classic'] || SKIN_CONFIG.classic;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(tilt);
+
+            const scale = 0.55;
+            ctx.scale(scale, scale);
+
+            const w = 80;
+            const h = 140;
+
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(-w / 2 - 6, -h / 3, 6, 16);
+            ctx.fillRect(w / 2, -h / 3, 6, 16);
+            ctx.fillRect(-w / 2 - 6, h / 6, 6, 16);
+            ctx.fillRect(w / 2, h / 6, 6, 16);
+
+            ctx.fillStyle = colors.hull;
+            ctx.beginPath();
+            ctx.moveTo(0, -h / 2);
+            ctx.quadraticCurveTo(w / 2 + 5, -h / 4, w / 2 + 5, h / 2 - 10);
+            ctx.quadraticCurveTo(w / 2, h / 2, 0, h / 2);
+            ctx.quadraticCurveTo(-w / 2, h / 2, -w / 2 - 5, h / 2 - 10);
+            ctx.quadraticCurveTo(-w / 2 - 5, -h / 4, 0, -h / 2);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            ctx.fillStyle = colors.trim;
+            ctx.beginPath();
+            ctx.moveTo(0, -h / 2 + 8);
+            ctx.quadraticCurveTo(w / 2 - 3, -h / 4, w / 2 - 3, h / 2 - 14);
+            ctx.lineTo(-w / 2 + 3, h / 2 - 14);
+            ctx.quadraticCurveTo(-w / 2 + 3, -h / 4, 0, -h / 2 + 8);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(-w / 2 + 10, h / 4, w - 20, h / 5);
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-w / 2 + 10, h / 4, w - 20, h / 5);
+
+            if (typeof cargo !== 'undefined' && cargo > 0) {
+                ctx.fillStyle = '#15803d';
+                ctx.fillRect(-w / 2 + 14, h / 4 + 4, 12, 8);
+                ctx.fillStyle = '#b91c1c';
+                ctx.fillRect(-w / 2 + 30, h / 4 + 6, 10, 6);
+                if (cargo > 3) {
+                    ctx.fillStyle = '#eab308';
+                    ctx.fillRect(-w / 2 + 22, h / 4 + 10, 14, 8);
+                }
+            }
+
+            ctx.fillStyle = colors.cabin;
+            ctx.fillRect(-w / 3, -h / 4, (w * 2) / 3, h / 3);
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(-w / 3, -h / 4, (w * 2) / 3, h / 3);
+
+            ctx.fillStyle = colors.light;
+            ctx.fillRect(-w / 3 + 6, -h / 4 + 6, (w * 2) / 3 - 12, 14);
+
+            ctx.fillStyle = colors.hull;
+            ctx.fillRect(-w / 3 + 4, -h / 4 + 22, (w * 2) / 3 - 8, 16);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(-4, -h / 4 + 24, 8, 8);
+
+            ctx.fillStyle = colors.trim;
+            ctx.beginPath();
+            ctx.moveTo(w / 3, -h / 6);
+            ctx.lineTo(w / 2 + 14, -h / 4);
+            ctx.lineTo(w / 2 + 18, -h / 4 + 6);
+            ctx.lineTo(w / 3 + 4, -h / 6 + 6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(w / 2 + 14, -h / 4 + 6, 4, 10);
+            ctx.beginPath();
+            ctx.arc(w / 2 + 16, -h / 4 + 18, 6, 0, Math.PI);
+            ctx.stroke();
+
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(-10, h / 2 - 10, 20, 16);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(-6, h / 2 + 6, 12, 8);
+
+            if (boat.shieldActive) {
+                ctx.strokeStyle = '#00ffff';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(0, 0, h / 2 + 12, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        function render() {
+            drawPixelRiver(ctx);
+
+            ctx.fillStyle = '#00ffff';
+            bullets.forEach(b => {
+                ctx.fillRect(b.x - 3, b.y, 6, 14);
+            });
+
+            ctx.fillStyle = '#ff0055';
+            bossBullets.forEach(bb => {
+                ctx.beginPath();
+                ctx.arc(bb.x, bb.y, 7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffea00';
+                ctx.fillRect(bb.x - 2, bb.y - 2, 4, 4);
+                ctx.fillStyle = '#ff0055';
+            });
+
+            obstacles.forEach(obs => {
+                if (obs.type === 'trash') {
+                    const cx = obs.x + obs.width / 2;
+                    const cy = obs.y + obs.height / 2;
+                    
+                    if (obs.subType === 0) {
+                        drawPixelCan(ctx, cx, cy, '#dc2626', '#ffffff', 0.1);
+                    } else if (obs.subType === 1) {
+                        drawPixelCan(ctx, cx, cy, '#2563eb', '#fde047', -0.3);
+                    } else if (obs.subType === 2) {
+                        drawPixelBottle(ctx, cx, cy, '#16a34a', 0.2);
+                    } else {
+                        drawPixelTire(ctx, cx, cy, 0.65, 0.0);
+                    }
+                } else if (obs.type === 'rock') {
+                    ctx.fillStyle = '#334155';
+                    ctx.beginPath();
+                    ctx.arc(obs.x + 15, obs.y + 15, 14, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillRect(obs.x + 5, obs.y + 5, 12, 10);
+                } else if (obs.type === 'coin') {
+                    ctx.fillStyle = '#eab308';
+                    ctx.beginPath();
+                    ctx.arc(obs.x + 15, obs.y + 15, 11, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#fef08a';
+                    ctx.fillRect(obs.x + 11, obs.y + 8, 4, 10);
+                } else if (obs.type === 'buoy') {
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillRect(obs.x + 5, obs.y, 20, 28);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(obs.x + 5, obs.y + 10, 20, 8);
+                }
+            });
+
+            if (activeBoss) drawBossEntity(ctx, activeBoss);
+
+            drawDetailedBoat(ctx, boat.x, height - 90, boat.tilt, gameData.skin);
+        }
+
+        function endGame() {
+            gameActive = false;
+            bgm.stop();
+            cancelAnimationFrame(animId);
+
+            addHighScore(currentPlayer, score, currentLevel);
+            gameData.coins += sessionCoins;
+            saveData();
+
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('touch-controls').classList.add('hidden');
+            document.getElementById('boss-hud').classList.add('hidden');
+
+            document.getElementById('over-stats').innerHTML = `
+                PLAYER: ${currentPlayer}<br>
+                SCORE: ${score}<br>
+                COINS EARNED: 🪙 ${sessionCoins}<br>
+                LEVEL REACHED: ${currentLevel}
+            `;
+
+            document.getElementById('game-over-screen').classList.remove('hidden');
+            sfx.playTone(100, 'sawtooth', 0.5);
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+            update();
+            render();
+            animId = requestAnimationFrame(gameLoop);
+        }
+
+        loadAllProfiles();
+        setPlayerProfile("ECO-HERO");
+    </script>
+</body>
+</html>
